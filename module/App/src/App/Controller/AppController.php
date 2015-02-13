@@ -44,7 +44,7 @@ class AppController extends AbstractActionController {
 		);
 	}
 	public function editAction() {
-		$form = new addForm ();
+		
 		$request = $this->getRequest ();
 		$id = $this->params ()->fromRoute ( 'id' );
 		$form->get ( 'state' )->setValue ( $id );
@@ -60,9 +60,24 @@ class AppController extends AbstractActionController {
 			$job = $dm->createQueryBuilder ( 'App\Document\User' )->update ()->field ( 'name' )->set ( $new )->field ( '_id' )->equals ( $eid )->getQuery ()->execute ();
 		}
 		return array (
-				'form' => $form 
+				'qb' => $form 
 		);
 	}
+	public function findAction() {
+	
+		$request = $this->getRequest ();
+		//$id = $this->params ()->fromRoute ( 'id' );
+		//$form->get ( 'state' )->setValue ( $id );
+		$dm = $this->getServiceLocator ()->get ( 'doctrine.documentmanager.odm_default' );
+		$qb = $dm->createQueryBuilder ( 'App\Document\User' )->field ( '_id' )->equals($id)->getQuery ()->execute ();
+		foreach ( $qb as $row ) {
+		$data=json_encode($row);
+		}
+		return array (
+				'qb' => $data
+		);
+	}
+	
 	public function loginAction() {
 		$form = new addForm ();
 		$request = $this->getRequest ();
