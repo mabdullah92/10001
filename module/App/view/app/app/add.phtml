@@ -1,0 +1,11 @@
+<?php 
+namespace App\view;
+$form = $this->form;
+$form->setAttribute('action', $this->url('app', array('action' => 'add')));
+$form->prepare();
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('username'));
+echo $this->formRow($form->get('login_pwd'));
+echo $this->formSubmit($form->get('submit'));
+echo $this->form()->closeTag();
+?>

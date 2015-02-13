@@ -1,0 +1,22 @@
+<?php 
+$title='Users';
+$this->headTitle($title);?>
+<h1>Users</h1>
+<p> <a href="<?php echo $this->url('app',array('action'=>'add'));?>">Add New User</a> </p>
+<table class="table">
+<tr>
+<th>Username</th>
+<th>Password</th>
+<th></th>
+</tr>
+<?php  foreach ($qb as $user):?>
+<tr>
+<td><?php  echo $this->escapehtml($user->getName()); ?></td>
+<td><?php  echo $this->escapehtml($user->getPassword()); ?></td>
+<td>
+<a href="<?php echo $this->url('app',array('action'=>'edit','id' => $user->getId()));?>">Edit</a>
+<a href="<?php echo $this->url('app',array('action'=>'delete','id' => $user->getId()));?>">Delete</a>
+</td>
+</tr>
+<?php endforeach;?>
+</table>

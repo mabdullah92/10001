@@ -1,0 +1,58 @@
+<script type="text/javascript" charset="utf-8">
+jQuery(document).ready(function () {
+	var log_chat_message = function  (message, type) {
+		
+		var msg=JSON.parse(message);
+
+		var li = jQuery('<li />').text(msg[0].name+":"+msg[0].chat);
+		
+		if (type === 'system') {
+			li.css({'font-weight': 'bold'});
+		} else if (type === 'leave') {
+			li.css({'font-weight': 'bold', 'color': '#F00'});
+		}
+				
+		jQuery('#chat_log').append(li);
+	};
+
+	var socket = io.connect('http://192.168.83.130:3000');
+
+	socket.on('entrance', function  (data) {
+	log_chat_message(data.message, 'system');
+
+	});
+
+	socket.on('exit', function  (data) {
+		log_chat_message(data.message, 'leave');
+	});
+
+	socket.on('chat', function  (data) {
+		log_chat_message(data.message, 'normal');
+		//console.log(data.message);
+	});
+
+	jQuery('#chat_box').keypress(function (event) {
+		if (event.which == 13) {
+			var name =jQuery('#chat_name').val();
+			var chat =jQuery('#chat_box').val();
+			var msg=[{"name":name,"chat":chat }];
+			var msgJson = JSON.stringify(msg);
+		//	console.log(msgJson);
+			socket.emit('chat', {message: msgJson});
+		    jQuery('#chat_box').val('');
+		}
+	});
+});
+
+</script>
+
+
+<div id="chatroom">
+	<ul id="chat_log">
+	</ul>
+</div>
+<?php
+$form = $this->form;
+echo $this->formRow ( $form->get ( 'chat_name' ) );
+echo $this->formRow ( $form->get ( 'chat_box' ) );
+?>

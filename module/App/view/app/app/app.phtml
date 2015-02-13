@@ -1,0 +1,112 @@
+<?php
+	namespace App\view;
+	$title = 'Application';
+	$this->headTitle ( $title );
+?>
+<script type="text/javascript">
+   <script src="http://192.168.83.130:3000/socket.io/socket.io.js"></script>
+  <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.17/socket.io.min.js"></script>
+-->   
+
+<script> 
+    var socket = io.connect('http://192.168.83.130:3000');
+    socket.on('new-item', function (data) {
+  	
+  	var msg=JSON.parse(data);
+  	 console.log(msg);
+      document.getElementById("userTable").innerHTML += "<td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td></td>";
+    });
+</script>
+	<div data-bind="page: {id: 'nav', role : 'start'}">
+	
+			<div data-bind="page: {id: 'login' }">
+		<?php 
+		$form = $this->form;
+		$form->setAttribute('action', $this->url('app', array('action' => 'login')));
+		$form->prepare();
+		echo $this->form()->openTag($form);
+		echo $this->formRow($form->get('login_name'));
+		echo $this->formRow($form->get('login_pwd'));
+		echo $this->formSubmit($form->get('submit'));
+		echo $this->form()->closeTag();
+		?>
+			</div>
+			<div data-bind="page: {id: 'grid'}">
+			
+				<h1>Users</h1>
+					<p>
+						<a href="#nav/add">Add New Member</a>.
+					</p>
+				<table class="table" id="userTable">
+					<tr>
+						<th>Username</th>
+						<th>Password</th>
+						<th></th>
+					</tr>
+		<?php 
+		foreach ($qb as $user):
+		?>
+					<tr>
+						<td><?php  echo $this->escapehtml($user->getName()); ?></td>
+						<td><?php  echo $this->escapehtml($user->getPassword()); ?></td>
+						<td>
+						<a href="<?php echo "#nav/edit/".$user->getId();?>">Edit</a>
+						<a href="<?php echo "#nav/delete/".$user->getId();?>">Delete</a>
+						</td>
+					</tr>
+		<?php
+ 		endforeach;
+ 		?>
+				</table>
+
+	</div>
+	<div data-bind="page: {id: 'add' }">
+		<?php
+			$form = $this->form;
+			$form->setAttribute ( 'id', "addForm" );
+			$form->prepare ();
+			echo $this->form ()->openTag ( $form );
+			echo $this->formRow ( $form->get ( 'username' ) );
+			echo $this->formRow ( $form->get ( 'login_pwd' ) );
+			echo $this->formRow ( $form->get ( 'add' ) ) . "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
+			echo $this->form ()->closeTag ();
+		?>
+	
+	</div>
+	<div data-bind="page: {id: 'delete' }">
+		<?php 
+			$form = $this->form;
+			$form->setAttribute('action', $this->url('app', array('action' => 'delete')));
+			$form->setAttribute ( 'id', "delForm" );
+			$form->prepare();
+			echo $this->form()->openTag($form);
+			echo $this->formRow($form->get('username'));
+			echo $this->formSubmit($form->get('submit')). "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
+			echo $this->form()->closeTag();
+		?>
+		</div>
+		<div data-bind="page: {id: 'edit' }">
+		<?php 
+			$form = $this->form;
+			$form->setAttribute('action', $this->url('app', array('action' => 'edit')));
+			$form->setAttribute ( 'id', "editForm" );
+			$form->prepare();
+			echo $this->form()->openTag($form);
+			echo $this->formRow($form->get('username'));
+			echo $this->formSubmit($form->get('submit')). "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
+			echo $this->form()->closeTag();
+		?>
+		</div>
+
+	</div>
+
+
+	<script type="text/javascript">
+        var viewModel = {
+        };
+
+        pager.extendWithPage(viewModel);
+        ko.applyBindings(viewModel);
+
+        pager.start();
+    </script>
