@@ -51,7 +51,7 @@ class AppController extends AbstractActionController {
 		$dm = $this->getServiceLocator ()->get ( 'doctrine.documentmanager.odm_default' );
 		$qb = $dm->createQueryBuilder ( 'App\Document\User' )->field ( '_id' )->equals($id)->getQuery ()->execute ();
 		foreach ( $qb as $row ) {
-			$form->get ( 'username' )->setValue ( $row->getName () );
+			$fo0rm->get ( 'username' )->setValue ( $row->getName () );
 		}
 		if (isset ( $_POST ['username'] )) 		// or use $_POST['username'] for specific
 		{
