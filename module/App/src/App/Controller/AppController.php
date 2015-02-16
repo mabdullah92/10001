@@ -14,6 +14,7 @@ use App\Document\User;
 use Zend\View\Model\ViewModel;
 use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use Zend\Session\Container;
 class AppController extends AbstractActionController {
 	
 	public function init() {
@@ -44,14 +45,16 @@ class AppController extends AbstractActionController {
 		);
 	}
 	public function editAction() {
-		
+		$viewModel = new ViewModel(array(
+				'foo' => 'bar'
+		));
+		$viewModel->setTerminal(true);
 		$request = $this->getRequest ();
-		$id = $this->params ()->fromRoute ( 'id' );
-		$form->get ( 'state' )->setValue ( $id );
+		$id = $request->getPost ( 'userId' );
 		$dm = $this->getServiceLocator ()->get ( 'doctrine.documentmanager.odm_default' );
 		$qb = $dm->createQueryBuilder ( 'App\Document\User' )->field ( '_id' )->equals($id)->getQuery ()->execute ();
 		foreach ( $qb as $row ) {
-			$fo0rm->get ( 'username' )->setValue ( $row->getName () );
+		echo json_encode($row);
 		}
 		if (isset ( $_POST ['username'] )) 		// or use $_POST['username'] for specific
 		{
@@ -59,10 +62,9 @@ class AppController extends AbstractActionController {
 			$eid = $request->getPost ( 'state' );
 			$job = $dm->createQueryBuilder ( 'App\Document\User' )->update ()->field ( 'name' )->set ( $new )->field ( '_id' )->equals ( $eid )->getQuery ()->execute ();
 		}
-		return array (
-				'qb' => $form 
-		);
+		return $viewModel;
 	}
+	
 	public function findAction() {
 	
 		$request = $this->getRequest ();
@@ -79,23 +81,26 @@ class AppController extends AbstractActionController {
 	}
 	
 	public function loginAction() {
-		$form = new addForm ();
+		  $viewModel = new ViewModel(array(
+        'foo' => 'bar'
+    ));
+    $viewModel->setTerminal(true);
 		$request = $this->getRequest ();
 		if (isset ( $_POST ['login_name'] )) {
 			$dm = $this->getServiceLocator ()->get ( 'doctrine.documentmanager.odm_default' );
 			$name = $request->getPost ( 'login_name' );
 			$pwd = $request->getPost ( 'login_pwd' );
 			$exists = $dm->createQueryBuilder ( 'App\Document\User' )->field ( 'name' )->equals ( $name )->field ( 'password' )->equals ( $pwd )->count ()->getQuery ()->execute ();
-			// echo $qb;
 			if ($exists) {
-				return $this->redirect ()->toUrl ( 'app#nav/grid' );
+				$user_session = new Container('user');
+				$user_session->username = $name;
+				echo "success";
+				//return $this->redirect ()->toUrl ( 'app#nav/grid' );
 			} else {
 				echo "Incorrect Credentials";
 			}
 		}
-		return array (
-				'form' => $form 
-		);
+		return $viewModel;
 	}
 	public function deleteAction() {
 		return array ();
@@ -127,7 +132,10 @@ class AppController extends AbstractActionController {
 				
 			$name = $request->getPost ( 'username' );
 			$pwd = $request->getPost ( 'login_pwd' );
-			$data[]=array($name,$pwd);
+			$user_session = new Container('user');
+			
+			$key=$user_session->username;
+			$data[]=array($name,$pwd,$key);
 			$data=json_encode($data);
 			$connection = new AMQPConnection ( 'localhost', 5672, 'guest', 'guest' );
 			$channel = $connection->channel ();
@@ -148,7 +156,6 @@ class AppController extends AbstractActionController {
 		$connection = new AMQPConnection ( 'localhost', 5672, 'guest', 'guest' );
 		$channel = $connection->channel ();
 		$channel->queue_declare ( 'MsgQueue', false, false, false, false );		
-	
 		$callback = function ($msg) {
 		$data=json_decode($msg->body);
 		echo "Recieved Data : ";

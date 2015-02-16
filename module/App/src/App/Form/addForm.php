@@ -120,5 +120,15 @@ class addForm extends Form
         				'onclick'=>'return addUser()'
         		)
         ));
+        $this->add(array(
+        		'name' => 'login',
+        		'attributes' => array(
+        				'type' => 'button',
+        				'value' => 'Sign in',
+        				'class' => 'btn btn-success',
+        				'style'=>'margin-left:73px',
+        				'onclick'=>'return loginUser()'
+        		)
+        ));
     }
 }
