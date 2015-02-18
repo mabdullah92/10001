@@ -12,24 +12,9 @@ namespace App;
 use Zend\ModuleManager\Feature\AutoloaderProviderInterface;
 use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
-use Zend\Session\Config\SessionConfig;
-use Zend\Session\Container;
-use Zend\Session\SessionManager;
+
 class Module implements AutoloaderProviderInterface
 {
-	public function initSession($config)
-	{
-		$sessionConfig = new SessionConfig();
-		$sessionConfig->setOptions($config);
-		$sessionManager = new SessionManager();
-		$sessionManager->start();
-		Container::setDefaultManager($sessionManager);
-		$this->initSession(array(
-				'remember_me_seconds' => 180,
-				'use_cookies' => true,
-				'cookie_httponly' => true,
-		));
-	}
     public function getAutoloaderConfig()
     {
         return array(

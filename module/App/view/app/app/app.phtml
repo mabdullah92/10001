@@ -1,46 +1,43 @@
 <?php
 	namespace App\view;
 	$title = 'Application';
-	use Zend\Session\Container;
-	$user_session = new Container('user');
-//	echo  $user_session->  username;
+	$this->headTitle ( $title );
 ?>
-  <script src="http://192.168.83.130:3000/socket.io/socket.io.js"></script>
 <script type="text/javascript">
+   <script src="http://192.168.83.130:3000/socket.io/socket.io.js"></script>
+  <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.17/socket.io.min.js"></script>
+-->   
+
+<script> 
     var socket = io.connect('http://192.168.83.130:3000');
     socket.on('new-item', function (data) {
   	
   	var msg=JSON.parse(data);
-  	//console.log(msg);
-  	
-  	if(msg[0][2]=="<?php echo $user_session->  username;?>")
+  	 console.log(msg);
       document.getElementById("userTable").innerHTML += "<td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td></td>";
     });
-</script> 
-	<div data-bind="page: {id: 'nav'}">
+</script>
+	<div data-bind="page: {id: 'nav', role : 'start'}">
 	
-			<div data-bind="page: {id: 'login',role : 'start' }">
-			<label id="validuser"></label>
+			<div data-bind="page: {id: 'login' }">
 		<?php 
 		$form = $this->form;
-		$form->setAttribute ( 'id', "loginForm" );
+		$form->setAttribute('action', $this->url('app', array('action' => 'login')));
 		$form->prepare();
 		echo $this->form()->openTag($form);
 		echo $this->formRow($form->get('login_name'));
 		echo $this->formRow($form->get('login_pwd'));
-		echo $this->formRow($form->get('login'));
+		echo $this->formSubmit($form->get('submit'));
 		echo $this->form()->closeTag();
 		?>
 			</div>
-			<div class="row">
-			<div class="col-sm-6">
 			<div data-bind="page: {id: 'grid'}">
 			
 				<h1>Users</h1>
 					<p>
 						<a href="#nav/add">Add New Member</a>.
 					</p>
-				<table class="table table-hover" id="userTable">
+				<table class="table" id="userTable">
 					<tr>
 						<th>Username</th>
 						<th>Password</th>
@@ -53,8 +50,8 @@
 						<td><?php  echo $this->escapehtml($user->getName()); ?></td>
 						<td><?php  echo $this->escapehtml($user->getPassword()); ?></td>
 						<td>
-						<a onclick="editUser(this)" id="<?php echo $user->getId();?>"><span class="glyphicon glyphicon-edit"></span></a> 
-						<a  id="<?php echo $user->getId();?>"><span class="glyphicon glyphicon-trash"></span> </a>
+						<a href="<?php echo "#nav/edit/".$user->getId();?>">Edit</a>
+						<a href="<?php echo "#nav/delete/".$user->getId();?>">Delete</a>
 						</td>
 					</tr>
 		<?php
@@ -63,7 +60,6 @@
 				</table>
 
 	</div>
-	</div></div>
 	<div data-bind="page: {id: 'add' }">
 		<?php
 			$form = $this->form;

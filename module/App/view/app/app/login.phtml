@@ -1,0 +1,12 @@
+<?php 
+namespace App\view;
+//var_dump($this->form);
+$form = $this->form;
+$form->setAttribute('action', $this->url('app', array('action' => 'login')));
+$form->prepare();
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('login_name'));
+echo $this->formRow($form->get('login_pwd'));
+echo $this->formSubmit($form->get('submit'));
+echo $this->form()->closeTag();
+?>
