@@ -1,112 +1,129 @@
 <?php
-	namespace App\view;
-	$title = 'Application';
-	use Zend\Session\Container;
-	$user_session = new Container('user');
-//	echo  $user_session->  username;
+namespace App\view;
+
+$title = 'Application';
+use Zend\Session\Container;
+$user_session = new Container('user');
+// echo $user_session-> username;
 ?>
-  <script src="http://192.168.83.130:3000/socket.io/socket.io.js"></script>
+<script src="http://192.168.83.130:3000/socket.io/socket.io.js"></script>
 <script type="text/javascript">
     var socket = io.connect('http://192.168.83.130:3000');
     socket.on('new-item', function (data) {
   	
   	var msg=JSON.parse(data);
-  	//console.log(msg);
+  	console.log(msg);
   	
   	if(msg[0][2]=="<?php echo $user_session->  username;?>")
-      document.getElementById("userTable").innerHTML += "<td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td></td>";
+      document.getElementById("userTable").innerHTML += "<tr id="+msg[0][3]+"><td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td><a onclick=\"setEditUser(this)\" id="+msg[0][3]+" ><span class=\"glyphicon glyphicon-edit\"></span> </a><a id="+msg[0][3]+" onclick=\"deleteUser(this)\"><span class=\"glyphicon glyphicon-trash\"></span></a></td></tr>";
     });
-</script> 
-	<div data-bind="page: {id: 'nav'}">
-	
-			<div data-bind="page: {id: 'login',role : 'start' }">
-			<label id="validuser"></label>
-		<?php 
-		$form = $this->form;
-		$form->setAttribute ( 'id', "loginForm" );
-		$form->prepare();
-		echo $this->form()->openTag($form);
-		echo $this->formRow($form->get('login_name'));
-		echo $this->formRow($form->get('login_pwd'));
-		echo $this->formRow($form->get('login'));
-		echo $this->form()->closeTag();
-		?>
+</script>
+<div data-bind="page: {id: 'nav'}">
+
+	<div data-bind="page: {id: 'login',role : 'start' }">
+		<label id="validuser"></label>
+		<?php
+$form = $this->form;
+$form->setAttribute('id', "loginForm");
+$form->prepare();
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('login_name'));
+echo $this->formRow($form->get('login_pwd'));
+echo $this->formRow($form->get('login'));
+echo $this->form()->closeTag();
+?>
 			</div>
-			<div class="row">
-			<div class="col-sm-6">
+	<div class="row">
+		<div class="col-sm-6">
 			<div data-bind="page: {id: 'grid'}">
-			
+
 				<h1>Users</h1>
-					<p>
-						<a href="#nav/add">Add New Member</a>.
-					</p>
+				<p>
+					<a href="#nav/add">Add New Member</a>.
+				</p>
 				<table class="table table-hover" id="userTable">
 					<tr>
 						<th>Username</th>
 						<th>Password</th>
 						<th></th>
 					</tr>
-		<?php 
-		foreach ($qb as $user):
-		?>
-					<tr>
+		<?php
+foreach ($qb as $user) :
+    ?>
+					<tr id="<?php echo $user->getId();?>">
 						<td><?php  echo $this->escapehtml($user->getName()); ?></td>
 						<td><?php  echo $this->escapehtml($user->getPassword()); ?></td>
-						<td>
-						<a onclick="setEditUser(this)" id="<?php echo $user->getId();?>"><span class="glyphicon glyphicon-edit"></span></a> 
-						<a onclick="deleteUser(this)"  id="<?php echo $user->getId();?>"><span class="glyphicon glyphicon-trash"></span> </a>
-						</td>
+						<td><a onclick="setEditUser(this)"
+							id="<?php echo $user->getId();?>"><span
+								class="glyphicon glyphicon-edit"></span></a> <a
+							onclick="deleteUser(this)" id="<?php echo $user->getId();?>"><span
+								class="glyphicon glyphicon-trash"></span> </a></td>
 					</tr>
 		<?php
- 		endforeach;
- 		?>
+endforeach
+;
+?>
 				</table>
 
+			</div>
+		</div>
 	</div>
-	</div></div>
 	<div data-bind="page: {id: 'add' }">
-		<?php
-			$form = $this->form;
-			$form->setAttribute ( 'id', "addForm" );
-			$form->prepare ();
-			echo $this->form ()->openTag ( $form );
-			echo $this->formRow ( $form->get ( 'username' ) );
-			echo $this->formRow ( $form->get ( 'login_pwd' ) );
-			echo $this->formRow ( $form->get ( 'add' ) ) . "&nbsp <a href=\"#nav/grid\">Cancel</a>";
-			echo $this->form ()->closeTag ();
-		?>
+		    <?php
+    $form = $this->form;
+    $form->setAttribute('id', "addForm");
+    $form->prepare();
+    echo $this->form()->openTag($form);
+    ?>
+			<label for="username">User Name:</label>
+			<?php
+echo $this->formRow($form->get('username'));
+?>
+			<br> <label for="username">Password:</label>
+			<?php
+echo $this->formRow($form->get('add_pwd'));
+echo "<br>";
+echo "<label style=\"color:red\" id=\"isAddValid\"></label>";
+echo "<br>";
+echo $this->formRow($form->get('add')) . "&nbsp <a href=\"#nav/grid\">Cancel</a>";
+echo $this->form()->closeTag();
+?>
 	
 	</div>
 	<div data-bind="page: {id: 'delete' }">
-		<?php 
-			$form = $this->form;
-			$form->setAttribute('action', $this->url('app', array('action' => 'delete')));
-			$form->setAttribute ( 'id', "delForm" );
-			$form->prepare();
-			echo $this->form()->openTag($form);
-			echo $this->formRow($form->get('username'));
-			echo $this->formSubmit($form->get('submit')). "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
-			echo $this->form()->closeTag();
-		?>
+		<?php
+$form = $this->form;
+$form->setAttribute('action', $this->url('app', array(
+    'action' => 'delete'
+)));
+$form->setAttribute('id', "delForm");
+$form->prepare();
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('username'));
+echo $this->formSubmit($form->get('submit')) . "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
+echo $this->form()->closeTag();
+?>
 		</div>
-		<div data-bind="page: {id: 'edit' }">
-		<?php 
-			$form = $this->form;
-			$form->setAttribute('action', $this->url('app', array('action' => 'edit')));
-			$form->setAttribute ( 'id', "editForm" );
-			$form->prepare();
-			echo $this->form()->openTag($form);
-			echo $this->formRow($form->get('stateEdit'));
-			echo $this->formRow($form->get('editdisp'));
-			echo $this->formRow($form->get('btn_edit')). "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
-			echo $this->form()->closeTag();
-		?>
+	<div data-bind="page: {id: 'edit' }">
+		<?php
+$form = $this->form;
+$form->setAttribute('action', $this->url('app', array(
+    'action' => 'edit'
+)));
+$form->setAttribute('id', "editForm");
+$form->prepare();
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('stateEdit'));
+echo $this->formRow($form->get('editdisp'));
+echo $this->formRow($form->get('btn_edit')) . "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
+echo $this->form()->closeTag();
+?>
 		</div>
 
-	</div>
+</div>
 
 
-	<script type="text/javascript">
+<script type="text/javascript">
         var viewModel = {
         };
 
