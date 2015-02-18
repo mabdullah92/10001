@@ -21,6 +21,7 @@ class addForm extends Form
                 'label' => 'User Name: '
             )
         ));
+        
         $this->add(array(
             'name' => 'login_pwd',
             'attributes' => array(
@@ -36,11 +37,23 @@ class addForm extends Form
             'name' => 'username',
             'attributes' => array(
                 'type' => 'text',
+            		'id'=>'username',
                 'placeholder' => 'User Name'
             ),
             'options' => array(
                 'label' => 'User Name:'
             )
+        ));
+        $this->add(array(
+        		'name' => 'editdisp',
+        		'attributes' => array(
+        				'type' => 'text',
+        				'id'=>'editdisp',
+        				'placeholder' => 'User Name'
+        		),
+        		'options' => array(
+        				'label' => 'User Name:'
+        		)
         ));
         $this->add(array(
             'name' => 'delete',
@@ -95,10 +108,10 @@ class addForm extends Form
         		)
         ));
         $this->add(array(
-        		'name' => 'state',
+        		'name' => 'stateEdit',
         		'attributes' => array(
         				'type' => 'hidden',		
-        				'id'=>'state'
+        				'id'=>'stateEdit'
         		)
         ));
         $this->add(array(
@@ -118,6 +131,26 @@ class addForm extends Form
         				'class' => 'btn btn-success',
         				'style'=>'margin-left:73px',
         				'onclick'=>'return addUser()'
+        		)
+        ));
+        $this->add(array(
+        		'name' => 'login',
+        		'attributes' => array(
+        				'type' => 'button',
+        				'value' => 'Sign in',
+        				'class' => 'btn btn-success',
+        				'style'=>'margin-left:73px',
+        				'onclick'=>'return loginUser()'
+        		)
+        ));
+        $this->add(array(
+        		'name' => 'btn_edit',
+        		'attributes' => array(
+        				'type' => 'button',
+        				'value' => 'Update',
+        				'class' => 'btn btn-success',
+        				'style'=>'margin-left:73px',
+        				'onclick'=>'return editUser()'
         		)
         ));
     }
