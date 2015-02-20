@@ -12,10 +12,18 @@ $user_session = new Container('user');
     socket.on('new-item', function (data) {
   	
   	var msg=JSON.parse(data);
-  	console.log(msg);
-  	
+  	if(msg[0][8]==="false")
+  	{
+  		document.getElementById("validuser").innerHTML="Incorrect Credentials"
+  	  	}
+	else	{
+  	if(msg[0][8]=="<?php echo $user_session-> readykey;?>")
+  	{
+  		window.location.href = "#nav/grid";
+  	}}
+  console.log(msg[0][2]);
   	if(msg[0][2]=="<?php echo $user_session->  username;?>")
-      document.getElementById("userTable").innerHTML += "<tr id="+msg[0][3]+"><td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td><a onclick=\"setEditUser(this)\" id="+msg[0][3]+" ><span class=\"glyphicon glyphicon-edit\"></span> </a><a id="+msg[0][3]+" onclick=\"deleteUser(this)\"><span class=\"glyphicon glyphicon-trash\"></span></a></td></tr>";
+      document.getElementById("userTable").innerHTML += "<tr id="+msg[0][4]+"><td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td><a onclick=\"setEditUser(this)\" id="+msg[0][4]+" ><span class=\"glyphicon glyphicon-edit\"></span> </a><a id="+msg[0][4]+" onclick=\"deleteUser(this)\"><span class=\"glyphicon glyphicon-trash\"></span></a></td></tr>";
     });
 </script>
 <div data-bind="page: {id: 'nav'}">
@@ -41,6 +49,10 @@ echo $this->form()->closeTag();
 				<p>
 					<a href="#nav/add">Add New Member</a>.
 				</p>
+				<p>
+					<input type="text" placeholder="search here" id="txt_search"/>
+				</p>
+			
 				<table class="table table-hover" id="userTable">
 					<tr>
 						<th>Username</th>

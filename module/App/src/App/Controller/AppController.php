@@ -191,6 +191,7 @@ class AppController extends AbstractActionController
             $connection->close();
             $user_session = new Container('user');
             $user_session->readykey = $login_user . $login_pwd;
+            $user_session->username = $login_user;
         }
         
         return $viewModel;
@@ -226,7 +227,9 @@ class AppController extends AbstractActionController
         $viewModel->setTerminal(true);
         return $viewModel;
     }
-
+public function koAction(){
+    
+}
     public function gridAction()
     {}
 
@@ -246,14 +249,16 @@ class AppController extends AbstractActionController
 
     public function dataAction()
     {
-        $qb = $this->getDm()
+         $qb = $this->getDm()
             ->createQueryBuilder('App\Document\User')
-            ->field('name')
             ->getQuery()
             ->execute();
-        return new ViewModel(array(
-            'qb' => $qb
-        ));
+        foreach ($qb as $row){
+            $arr[]=array("name"=>$row->getName(),"pwd"=>$row->getPassword(),"id"=>$row->getId());
+        }
+     $json = json_encode($arr);
+     $this->response->setContent($json);
+     return $this->response;
     }
 
     public function prodAction()
@@ -303,7 +308,7 @@ class AppController extends AbstractActionController
             
             // INSERT DATA
             if ($data[0][3] == 1) // CHECKING OPP CODE 1 FOR INSERT
-{
+            {
                 echo "Request for insert record ... \n";
                 $user = new User();
                 $user->setPassword($data[0][1]);
@@ -328,10 +333,12 @@ class AppController extends AbstractActionController
                     ->getQuery()
                     ->execute();
                 if ($exists) {
+                    echo "Credentials Authenticated ... \n";
                     $data[0][] = $data[0][6].$data[0][7]; // PUSH KEY TO array at 8
                 } 
                 else {
-                    echo "false \n";
+                    $data[0][] = "false"; // PUSH KEY TO array at 8
+                    echo "Incorrect Credentials \n";
                 }
             }
             if ($data[0][3] == 2) // CHECKING OPP CODE 1 FOR DELETE
@@ -375,8 +382,8 @@ class AppController extends AbstractActionController
         };
         
         $channel->basic_consume('MsgQueue', '', false, true, false, false, $callback);
-        while (count($channel->callbacks)) {
-            
+        while (count($channel->callbacks)) 
+        { 
             $channel->wait();
         }
         $channel->close();
