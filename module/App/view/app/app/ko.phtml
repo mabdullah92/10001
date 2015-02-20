@@ -1,0 +1,61 @@
+
+<div>
+<!-- data-bind="value: search, valueUpdate: 'afterkeydown'" -->
+			<input  />
+		</div>
+
+<div class='liveExample'> 
+    
+    <div data-bind='simpleGrid: gridViewModel'> </div>
+     
+    
+     
+    <button data-bind='click: sortByName'>
+        Sort by name
+    </button>
+     
+    <button data-bind='click: jumpToFirstPage, enable: gridViewModel.currentPageIndex'>
+        Jump to first page
+    </button>
+    
+</div>
+<script
+		src="http://knockoutjs.com/downloads/knockout-3.2.0.js"></script>
+	<script
+		src="http://knockoutjs.com/examples/resources/knockout.simpleGrid.3.0.js"></script>
+
+	<script>
+		//var data=
+	var initialData = $.getJSON("http://192.168.83.130/demoz2/public/app/data", function(data) { 
+
+
+	
+	                
+	               var PagedGridModel = function(items) {
+	                   this.items = ko.observableArray(items);
+	                
+	                 
+	                   this.sortByName = function() {
+	                       this.items.sort(function(a, b) {
+	                           return a.name < b.name ? -1 : 1;
+	                       });
+	                   };
+	                
+	                   this.jumpToFirstPage = function() {
+	                       this.gridViewModel.currentPageIndex(0);
+	                   };
+	                
+	                   this.gridViewModel = new ko.simpleGrid.viewModel({
+	                       data: this.items,
+	                       columns: [
+	                           { headerText: "Id", rowText: "id" },
+	                           { headerText: "Name ", rowText: "name" },
+	                           { headerText: "Password", rowText: "pwd" }
+	                       ],
+	                       pageSize: 4
+	                   });
+	               };
+	                
+	               ko.applyBindings(new PagedGridModel(data));	
+	});
+	</script>
