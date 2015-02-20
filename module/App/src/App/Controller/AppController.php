@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Zend Framework (http://framework.zend.com/)
  *
@@ -16,10 +15,18 @@ use Zend\View\Model\ViewModel;
 use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use Zend\Session\Container;
+use Zend\View\Model\JsonModel;
 
 class AppController extends AbstractActionController
 {
 
+    /*
+     * OPERATION CODE REFERENCE
+     * LOGIN : 0
+     * INSERT: 1
+     * DELETE: 2
+     * UPDATE: 3
+     */
     public function init()
     {
         // $this->dm = $this->getServiceLocator ()->get ( 'doctrine.documentmanager.odm_default' );
@@ -105,15 +112,25 @@ class AppController extends AbstractActionController
 {
             $new = $this->getReq()->getPost('newName');
             $eid = $this->getReq()->getPost('editId');
-            $job = $this->getDm()
-                ->createQueryBuilder('App\Document\User')
-                ->update()
-                ->field('name')
-                ->set($new)
-                ->field('_id')
-                ->equals($eid)
-                ->getQuery()
-                ->execute();
+            $opp = 3; // OPCODE THREE FOR UPDATE
+            $data[] = array(
+                null, // 0
+                null, // 1
+                null, // 2
+                $opp, // 3
+                $eid, // 4
+                $new
+            ); // 5
+            
+            $data = json_encode($data);
+            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
+            $channel = $connection->channel();
+            $channel->queue_declare('MsgQueue', false, false, false, false);
+            $msg = new AMQPMessage($data);
+            $channel->basic_publish($msg, '', 'MsgQueue');
+            echo " [x] Sent 'Message2!'\n";
+            $channel->close();
+            $connection->close();
         }
         
         $viewModel = new ViewModel(array(
@@ -148,26 +165,33 @@ class AppController extends AbstractActionController
         
         if (isset($_POST['login_name'])) {
             
-            $name = $this->getReq()->getPost('login_name');
-            $pwd = $this->getReq()->getPost('login_pwd');
-            $exists = $this->getDm()
-                ->createQueryBuilder('App\Document\User')
-                ->field('name')
-                ->equals($name)
-                ->field('password')
-                ->equals($pwd)
-                ->count()
-                ->getQuery()
-                ->execute();
-            if ($exists) {
-                $user_session = new Container('user');
-                $user_session->username = $name;
-                echo "success";
-                // return $this->redirect ()->toUrl ( 'app#nav/grid' );
-            } else {
-                echo "Incorrect Credentials";
-            }
+            $login_user = $this->getReq()->getPost('login_name');
+            $login_pwd = $this->getReq()->getPost('login_pwd');
+            $opp = 0; // SET OPPCODE FOR LOGIN
+            $data[] = array(
+                null, // 0
+                null, // 1
+                null, // 2
+                $opp, // 3
+                null, // 4
+                null, // 5
+                $login_user, // 6
+                $login_pwd
+            ); // 7
+            
+            $data = json_encode($data);
+            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
+            $channel = $connection->channel();
+            $channel->queue_declare('MsgQueue', false, false, false, false);
+            $msg = new AMQPMessage($data);
+            $channel->basic_publish($msg, '', 'MsgQueue');
+            // echo " [x] Sent 'Message2!'\n";
+            $channel->close();
+            $connection->close();
+            $user_session = new Container('user');
+            $user_session->readykey = $login_user . $login_pwd;
         }
+        
         return $viewModel;
     }
 
@@ -176,13 +200,23 @@ class AppController extends AbstractActionController
         if (isset($_POST['delId'])) {
             
             $delId = $this->getReq()->getPost('delId');
-            $this->getDm()
-                ->createQueryBuilder('App\Document\User')
-                ->remove()
-                ->field('_id')
-                ->equals(new \MongoId($delId))
-                ->getQuery()
-                ->execute();
+            $opp = 2;
+            $data[] = array(
+                null,
+                null,
+                null,
+                $opp,
+                $delId
+            );
+            $data = json_encode($data);
+            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
+            $channel = $connection->channel();
+            $channel->queue_declare('MsgQueue', false, false, false, false);
+            $msg = new AMQPMessage($data);
+            $channel->basic_publish($msg, '', 'MsgQueue');
+            echo " [x] Sent 'Message2!'\n";
+            $channel->close();
+            $connection->close();
         }
         $viewModel = new ViewModel(array(
             'foo' => 'bar'
@@ -228,13 +262,15 @@ class AppController extends AbstractActionController
         if ($this->getReq()->isPost()) // or use $_POST['username'] for specific
 {
             $name = $this->getReq()->getPost('username');
+            $opp = 1; // see opperation code reference add top
             $pwd = $this->getReq()->getPost('add_pwd');
             $user_session = new Container('user');
             $key = $user_session->username;
             $data[] = array(
                 $name,
                 $pwd,
-                $key
+                $key,
+                $opp
             );
             $data = json_encode($data);
             $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
@@ -257,37 +293,89 @@ class AppController extends AbstractActionController
         $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
         $channel = $connection->channel();
         $channel->queue_declare('MsgQueue', false, false, false, false);
-        $callback = function ($msg) //GET DATA FROM MSG QUEUE
+        $callback = function ($msg) // GET DATA FROM MSG QUEUE
         {
-            $data = json_decode($msg->body); //DECODE TO ARRAY FOR SAVING PURPOSE
+            $data = json_decode($msg->body); // DECODE TO RECIEVED MSG ARRAY
             echo "Recieved Data : ";
             var_dump($msg->body);
-            // $connection = new AMQPConnection ( 'localhost', 5672, 'guest', 'guest' );
-            // $channel = $connection->channel ();
-            // $msg1 = new AMQPMessage ( $msg->body );
-            // $channel->basic_publish ( $msg1, '', 'dataQ' );
-            // $channel->close ();
-            // $connection->close ();
             echo "Data Sent to Response Queue ... \n";
             
-            $user = new User(); 
-            $user->setPassword($data[0][1]);
-            $user->setName($data[0][0]);
-            $this->getDm()->persist($user);
-            $this->getDm()->flush();
-            $uu = $user->getId();
+            // INSERT DATA
+            if ($data[0][3] == 1) // CHECKING OPP CODE 1 FOR INSERT
+{
+                echo "Request for insert record ... \n";
+                $user = new User();
+                $user->setPassword($data[0][1]);
+                $user->setName($data[0][0]);
+                $this->getDm()->persist($user);
+                $this->getDm()->flush();
+                $uu = $user->getId();
+                $data[0][] = $uu; // PUSH ID OF INSERTED RECORD TO ARRAY
+                echo "Data Saved ... \n";
+            }
             
-            $data[0][] = $uu; //push id of inserted element to msg array
+            if ($data[0][3] == 0) // CHECKING OPP CODE 0 FOR LOGIN
+{
+                echo "Request for authentication ... \n";
+                $exists = $this->getDm()
+                    ->createQueryBuilder('App\Document\User')
+                    ->field('name')
+                    ->equals($data[0][6])
+                    ->field('password')
+                    ->equals($data[0][7])
+                    ->count()
+                    ->getQuery()
+                    ->execute();
+                if ($exists) {
+                    $user_session = new Container('user');
+                    $user_session->responsekey = $data[0][6] . $data[0][7];
+                    echo "Response key : ".$user_session->responsekey. "\n";
+                    $user_session = new Container('user');
+                    $user_session->username = $data[0][6];
+                    echo "Session created with username : " . $user_session->username . "\n";
+                    // $this->redirect ()->toUrl ( '#nav/grid' );
+                } else {
+                    echo "false \n";
+                }
+            }
+            if ($data[0][3] == 2) // CHECKING OPP CODE 1 FOR DELETE
+{
+                echo "Request for delete ... \n";
+                $delId = $data[0][4];
+                $this->getDm()
+                    ->createQueryBuilder('App\Document\User')
+                    ->remove()
+                    ->field('_id')
+                    ->equals(new \MongoId($delId))
+                    ->getQuery()
+                    ->execute();
+                echo "Record Deleted ... \n";
+            }
+            if ($data[0][3] == 3) // CHECKING OPP CODE 1 FOR UPDATE
+{
+                echo "Request for update ... \n";
+                $this->getDm()
+                    ->createQueryBuilder('App\Document\User')
+                    ->update()
+                    ->field('name')
+                    ->set($data[0][5])
+                    ->field('_id')
+                    ->equals($data[0][4])
+                    ->getQuery()
+                    ->execute();
+                echo "Record updated ... \n";
+            }
+            
             // var_dump($data);
             $data = json_encode($data);
             var_dump($data);
+            
             $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
             $channel = $connection->channel();
             $msg1 = new AMQPMessage($data);
             $channel->basic_publish($msg1, '', 'dataQ');
             $channel->close();
             $connection->close();
-            echo "Data Saved ... \n";
         };
         
         $channel->basic_consume('MsgQueue', '', false, true, false, false, $callback);
@@ -305,5 +393,28 @@ class AppController extends AbstractActionController
         return array(
             'form' => $form
         );
+    }
+
+    public function compareAction()
+    {
+        $user_session = new Container('user');
+        print_r($user_session->readykey);
+        print_r($user_session->responsekey);
+        if ($user_session->responsekey == $user_session->readykey) {
+            $arr = array(
+                "auth" => "true"
+            );
+        } else {
+            $user_session->username = "";
+            $arr = array(
+                "auth" => "false"
+            );
+           
+        }
+        $viewModel = new ViewModel(array(
+            'data' => $arr
+        ));
+        $viewModel->setTerminal(true);
+        return $viewModel;
     }
 }

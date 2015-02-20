@@ -83,12 +83,26 @@ function loginUser() {
 			})
 			.done(
 					function(msg) {
-						if (msg == "success") {
-							// console.log(msg);
-							window.location.href = "#nav/grid";
-						} else {
-							// console.log(msg);
-							document.getElementById("validuser").innerHTML = "Incorrect Credentials";
-						}
+						// level logic :D
+						$
+						.ajax({
+							type : "POST",
+							url : "http://192.168.83.130/demoz2/public/app/compare",
+							cache : false,
+							data : $("#loginForm").serialize()
+						})
+						.done(
+								function(auth) {
+									
+									console.log(auth);
+								});
 					});
 }
+// if (msg == "success") {
+// // console.log(msg);
+// window.location.href = "#nav/grid";
+// } else {
+// // console.log(msg);
+// document.getElementById("validuser").innerHTML = "Incorrect Credentials";
+// }
+					
