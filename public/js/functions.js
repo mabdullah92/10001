@@ -84,18 +84,6 @@ function loginUser() {
 			.done(
 					function(msg) {
 						// level logic :D
-						$
-						.ajax({
-							type : "POST",
-							url : "http://192.168.83.130/demoz2/public/app/compare",
-							cache : false,
-							data : $("#loginForm").serialize()
-						})
-						.done(
-								function(auth) {
-									
-									console.log(auth);
-								});
 					});
 }
 // if (msg == "success") {

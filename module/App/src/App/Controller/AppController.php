@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Zend Framework (http://framework.zend.com/)
  *
@@ -315,7 +316,7 @@ class AppController extends AbstractActionController
             }
             
             if ($data[0][3] == 0) // CHECKING OPP CODE 0 FOR LOGIN
-{
+            {
                 echo "Request for authentication ... \n";
                 $exists = $this->getDm()
                     ->createQueryBuilder('App\Document\User')
@@ -327,14 +328,9 @@ class AppController extends AbstractActionController
                     ->getQuery()
                     ->execute();
                 if ($exists) {
-                    $user_session = new Container('user');
-                    $user_session->responsekey = $data[0][6] . $data[0][7];
-                    echo "Response key : ".$user_session->responsekey. "\n";
-                    $user_session = new Container('user');
-                    $user_session->username = $data[0][6];
-                    echo "Session created with username : " . $user_session->username . "\n";
-                    // $this->redirect ()->toUrl ( '#nav/grid' );
-                } else {
+                    $data[0][] = $data[0][6].$data[0][7]; // PUSH KEY TO array at 8
+                } 
+                else {
                     echo "false \n";
                 }
             }
