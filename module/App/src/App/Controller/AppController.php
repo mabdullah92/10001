@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/App for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- */
 namespace App\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
@@ -27,214 +20,55 @@ class AppController extends AbstractActionController
      * INSERT: 1
      * DELETE: 2
      * UPDATE: 3
+     * SEARCH: 4
      */
-    public function init()
-    {
-        // $this->dm = $this->getServiceLocator ()->get ( 'doctrine.documentmanager.odm_default' );
-    }
+    public function init() { }
 
     private function getDm()
     {
         $dm = $this->getServiceLocator()->get('doctrine.documentmanager.odm_default');
+
         return $dm;
     }
-
     private function getReq()
     {
         $request = $this->getRequest();
         return $request;
     }
-
-    public function indexAction()
+    private function sendMsg($data)
     {
-        $qb = $this->getDm()
-            ->createQueryBuilder('App\Document\User')
-            ->field('name')
-            ->getQuery()
-            ->execute();
-        return new ViewModel(array(
-            'qb' => $qb
-        ));
+        $data = json_encode($data);
+        $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
+        $channel = $connection->channel();
+        $channel->queue_declare('MsgQueue', false, false, false, false);
+        $msg = new AMQPMessage($data);
+        $channel->basic_publish($msg, '', 'MsgQueue');
+        echo " [x] Sent 'Message2!'\n";
+        $channel->close();
+        $connection->close();
     }
-
-    public function addAction()
+    //Perform signed In validation
+    private function  isValid()
     {
-        $form = new addForm();
-        // $request = $this->getRequest ();
-        if (isset($_POST['editId'])) // or use $_POST['username'] for specific
-{
-            $new = $this->getReq()->getPost('newName');
-            $eid = $this->getReq()->getPost('editId');
-            $job = $this->getDm()
-                ->createQueryBuilder('App\Document\User')
-                ->update()
-                ->field('name')
-                ->set($new)
-                ->field('_id')
-                ->equals($eid)
-                ->getQuery()
-                ->execute();
+        $user_session = new Container('user');
+        $username=$user_session->username;
+        if( $username !== null)
+        {
+            return $username;
         }
-        return array(
-            'form' => $form
-        );
-    }
-
-    public function seteditAction()
-    {
-        $id = $this->getReq()->getPost('userId');
-        $row = "no record";
-        $qb = $this->getDm()
-            ->createQueryBuilder('App\Document\User')
-            ->field('_id')
-            ->equals(new \MongoId($id))
-            ->getQuery()
-            ->execute();
-        foreach ($qb as $row) {
-            
-            $arr = array(
-                'id' => $row->getId(),
-                'name' => $row->getName(),
-                'password' => $row->getPassword()
-            );
+        else
+        {
+            return "false";
         }
-        
-        $viewModel = new ViewModel(array(
-            'foo' => 'bar',
-            'data' => $arr
-        ));
-        $viewModel->setTerminal(true);
-        return $viewModel;
     }
 
-    public function editAction()
-    {
-        if (isset($_POST['editId'])) // or use $_POST['username'] for specific
-{
-            $new = $this->getReq()->getPost('newName');
-            $eid = $this->getReq()->getPost('editId');
-            $opp = 3; // OPCODE THREE FOR UPDATE
-            $data[] = array(
-                null, // 0
-                null, // 1
-                null, // 2
-                $opp, // 3
-                $eid, // 4
-                $new
-            ); // 5
-            
-            $data = json_encode($data);
-            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
-            $channel = $connection->channel();
-            $channel->queue_declare('MsgQueue', false, false, false, false);
-            $msg = new AMQPMessage($data);
-            $channel->basic_publish($msg, '', 'MsgQueue');
-            echo " [x] Sent 'Message2!'\n";
-            $channel->close();
-            $connection->close();
-        }
-        
-        $viewModel = new ViewModel(array(
-            'foo' => 'bar'
-        ));
-        $viewModel->setTerminal(true);
-        return $viewModel;
-    }
+    //Index Action is Still Unused
+    public function indexAction(){ }
 
-    public function findAction()
-    {
-        $qb = $this->getDm()
-            ->createQueryBuilder('App\Document\User')
-            ->field('_id')
-            ->equals($id)
-            ->getQuery()
-            ->execute();
-        foreach ($qb as $row) {
-            $data = json_encode($row);
-        }
-        return array(
-            'qb' => $data
-        );
-    }
-
-    public function loginAction()
-    {
-        $viewModel = new ViewModel(array(
-            'foo' => 'bar'
-        ));
-        $viewModel->setTerminal(true);
-        
-        if (isset($_POST['login_name'])) {
-            
-            $login_user = $this->getReq()->getPost('login_name');
-            $login_pwd = $this->getReq()->getPost('login_pwd');
-            $opp = 0; // SET OPPCODE FOR LOGIN
-            $data[] = array(
-                null, // 0
-                null, // 1
-                null, // 2
-                $opp, // 3
-                null, // 4
-                null, // 5
-                $login_user, // 6
-                $login_pwd
-            ); // 7
-            
-            $data = json_encode($data);
-            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
-            $channel = $connection->channel();
-            $channel->queue_declare('MsgQueue', false, false, false, false);
-            $msg = new AMQPMessage($data);
-            $channel->basic_publish($msg, '', 'MsgQueue');
-            // echo " [x] Sent 'Message2!'\n";
-            $channel->close();
-            $connection->close();
-            $user_session = new Container('user');
-            $user_session->readykey = $login_user . $login_pwd;
-            $user_session->username = $login_user;
-        }
-        
-        return $viewModel;
-    }
-
-    public function deleteAction()
-    {
-        if (isset($_POST['delId'])) {
-            
-            $delId = $this->getReq()->getPost('delId');
-            $opp = 2;
-            $data[] = array(
-                null,
-                null,
-                null,
-                $opp,
-                $delId
-            );
-            $data = json_encode($data);
-            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
-            $channel = $connection->channel();
-            $channel->queue_declare('MsgQueue', false, false, false, false);
-            $msg = new AMQPMessage($data);
-            $channel->basic_publish($msg, '', 'MsgQueue');
-            echo " [x] Sent 'Message2!'\n";
-            $channel->close();
-            $connection->close();
-        }
-        $viewModel = new ViewModel(array(
-            'foo' => 'bar'
-        ));
-        
-        $viewModel->setTerminal(true);
-        return $viewModel;
-    }
-public function koAction(){
-    
-}
-    public function gridAction()
-    {}
-
+    //For Basic layout of Application
     public function appAction()
     {
+
         $form = new addForm();
         $qb = $this->getDm()
             ->createQueryBuilder('App\Document\User')
@@ -247,52 +81,189 @@ public function koAction(){
         ));
     }
 
+    //Basic Login Operation
+    public function loginAction()
+    {
+        $viewModel = new ViewModel(array(
+            'foo' => 'bar'
+        ));
+        $viewModel->setTerminal(true);
+
+        if (isset($_POST['login_name'])) {
+
+            $login_user = $this->getReq()->getPost('login_name');
+            $login_pwd = $this->getReq()->getPost('login_pwd');
+            $opp = 0; // SET OPPCODE FOR LOGIN
+            $data[] = array(
+                "opp"=>  $opp,
+                "loginU"=> $login_user,
+                "loginP"=> $login_pwd
+            );
+            $user_session = new Container('user');
+            //$user_session->readykey = $login_user . $login_pwd;
+            $user_session->username = $login_user;
+            $this->sendMsg($data);
+
+        }
+
+        return $viewModel;
+    }
+
+    //CHECK IF LOGED IN
+    public function isloggedinAction(){
+        echo $this->isValid();
+        return $this->getResponse();
+    }
+    //logout
+    public function logoutAction(){
+        $user_session = new Container('user');
+        $user_session->username = null;
+        echo "logout";
+        return $this->getResponse();
+    }
+
+    //populates the initial shown grid using knockout
     public function dataAction()
     {
-         $qb = $this->getDm()
+        $qb = $this->getDm()
             ->createQueryBuilder('App\Document\User')
             ->getQuery()
             ->execute();
         foreach ($qb as $row){
             $arr[]=array("name"=>$row->getName(),"pwd"=>$row->getPassword(),"id"=>$row->getId());
         }
-     $json = json_encode($arr);
-     $this->response->setContent($json);
-     return $this->response;
+        $json = json_encode($arr);
+        $this->response->setContent($json);
+        return $this->response;
     }
 
+    //Sends Insert Request along with data
     public function prodAction()
     {
         $form = new addForm();
-        
+
         if ($this->getReq()->isPost()) // or use $_POST['username'] for specific
-{
+        {
             $name = $this->getReq()->getPost('username');
             $opp = 1; // see opperation code reference add top
             $pwd = $this->getReq()->getPost('add_pwd');
             $user_session = new Container('user');
             $key = $user_session->username;
-            $data[] = array(
-                $name,
-                $pwd,
-                $key,
-                $opp
+            $data=null;
+            $data[0]=array("key"=>$key,
+                "opp"=>$opp,
+                "loginAuth"=>$this->isValid());
+            $data[1] = array(
+                "name"=>$name,
+                "pwd"=>$pwd,
             );
-            $data = json_encode($data);
-            $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
-            $channel = $connection->channel();
-            $channel->queue_declare('MsgQueue', false, false, false, false);
-            $msg = new AMQPMessage($data);
-            $channel->basic_publish($msg, '', 'MsgQueue');
-            echo " [x] Sent 'Message2!'\n";
-            $channel->close();
-            $connection->close();
+            $this->sendMsg($data);
         }
         return array(
             'form' => $form
         );
     }
 
+    //Sets update fields
+    public function seteditAction()
+    {
+        $id = $this->getReq()->getPost('userId');
+        $row = "no record";
+        $qb = $this->getDm()
+            ->createQueryBuilder('App\Document\User')
+            ->field('_id')
+            ->equals(new \MongoId($id))
+            ->getQuery()
+            ->execute();
+        foreach ($qb as $row) {
+
+            $arr = array(
+                'id' => $row->getId(),
+                'name' => $row->getName(),
+                'password' => $row->getPassword()
+            );
+        }
+
+        $viewModel = new ViewModel(array(
+            'foo' => 'bar',
+            'data' => $arr
+        ));
+        $viewModel->setTerminal(true);
+        return $viewModel;
+    }
+
+    //Send edit Request to consumer along with updated params and Id
+    public function editAction()
+    {
+        if (isset($_POST['id'])) // or use $_POST['username'] for specific
+        {
+            $new = $this->getReq()->getPost('name');
+            $pwd = $this->getReq()->getPost('password');
+            $eid = $this->getReq()->getPost('id');
+            $opp = 3; // OPPCODE THREE FOR UPDATE
+            $data[] = array(
+                "opp"=>  $opp,
+                "editId"=>$eid,
+                "newName"=>$new,
+                "pwd"=>$pwd
+            );
+
+            $this->sendMsg($data);
+        }
+
+        $viewModel = new ViewModel(array(
+            'foo' => 'bar'
+        ));
+        $viewModel->setTerminal(true);
+        return $viewModel;
+    }
+
+    //Sends Delete Request with delete Id
+    public function deleteAction()
+    {
+        if (isset($_POST['delId'])) {
+
+            $delId = $this->getReq()->getPost('delId');
+            $opp = 2;
+            $data[] = array(
+                "opp"=>$opp,
+                "dellId"=> $delId
+            );
+            $this->sendMsg($data);
+        }
+        $viewModel = new ViewModel(array(
+            'foo' => 'bar'
+        ));
+
+        $viewModel->setTerminal(true);
+        return $viewModel;
+    }
+
+    //search Action
+    public function searchAction() {
+
+        if($this->isValid()=="false"){
+            echo "false";
+        }
+        else
+        {
+            if (isset($_POST['search'])) {
+
+                $search = $this->getReq()->getPost('search');
+                $opp = 4;
+                $data[] = array(
+                    "loginAuth"=>$this->isValid(),
+                    "opp"=>$opp,
+                    "search"=> $search
+                );
+                $this->sendMsg($data);
+            }
+
+        }
+        return $this->getResponse();
+    }
+
+    //Main Consumer for processing queue data
     public function consAction()
     {
         echo "Listening ... \n";
@@ -301,50 +272,69 @@ public function koAction(){
         $channel->queue_declare('MsgQueue', false, false, false, false);
         $callback = function ($msg) // GET DATA FROM MSG QUEUE
         {
-            $data = json_decode($msg->body); // DECODE TO RECIEVED MSG ARRAY
-            echo "Recieved Data : ";
+            $data = json_decode($msg->body,true); // DECODE TO RECEIVED MSG ARRAY
+            echo "Received Data : ";
             var_dump($msg->body);
             echo "Data Sent to Response Queue ... \n";
-            
-            // INSERT DATA
-            if ($data[0][3] == 1) // CHECKING OPP CODE 1 FOR INSERT
-            {
-                echo "Request for insert record ... \n";
-                $user = new User();
-                $user->setPassword($data[0][1]);
-                $user->setName($data[0][0]);
-                $this->getDm()->persist($user);
-                $this->getDm()->flush();
-                $uu = $user->getId();
-                $data[0][] = $uu; // PUSH ID OF INSERTED RECORD TO ARRAY
-                echo "Data Saved ... \n";
-            }
-            
-            if ($data[0][3] == 0) // CHECKING OPP CODE 0 FOR LOGIN
+
+            //Login and Update, Delete, Insert Start here
+            if ($data[0]["opp"] == 0) // CHECKING OPP CODE 0 FOR LOGIN
             {
                 echo "Request for authentication ... \n";
                 $exists = $this->getDm()
                     ->createQueryBuilder('App\Document\User')
                     ->field('name')
-                    ->equals($data[0][6])
+                    ->equals($data[0]["loginU"])
                     ->field('password')
-                    ->equals($data[0][7])
+                    ->equals($data[0]["loginP"])
                     ->count()
                     ->getQuery()
                     ->execute();
                 if ($exists) {
                     echo "Credentials Authenticated ... \n";
-                    $data[0][] = $data[0][6].$data[0][7]; // PUSH KEY TO array at 8
-                } 
+                    $qb = $this->getDm()
+                        ->createQueryBuilder('App\Document\User')
+                        ->getQuery()
+                        ->execute();
+                    foreach ($qb as $row){
+                        $arr[]=array("name"=>$row->getName(),"pwd"=>$row->getPassword(),"id"=>$row->getId());
+                    }
+                    $json = json_encode($arr);
+                    $data[0]["opp"]=0;
+                    $data[0]["loginAuth"] = $data[0]["loginU"]; // PUSH KEY TO array at 8
+                    $data[1]["data"]=$arr;
+                    $data[2]["cols"]=array("id","name","password");
+                }
                 else {
-                    $data[0][] = "false"; // PUSH KEY TO array at 8
+                    $data[0]["loginAuth"] = "false"; // PUSH KEY TO array at 8
                     echo "Incorrect Credentials \n";
                 }
             }
-            if ($data[0][3] == 2) // CHECKING OPP CODE 1 FOR DELETE
-{
+            if ($data[0]["opp"] == 1) // CHECKING OPP CODE 1 FOR INSERT
+            {
+                echo "Request for insert record ... \n";
+                $user = new User();
+                $auth=$data[0]["loginAuth"];
+                $user->setPassword($data[1]["pwd"]);
+                $user->setName($data[1]["name"]);
+                $this->getDm()->persist($user);
+                $this->getDm()->flush();
+                $id = $user->getId();
+                $name = $user->getName();
+                $pwd = $user->getPassword();
+                $colhead =array("id","name","password");
+                $arr=array("id"=>$id,"name"=>$name,"password"=>$pwd);
+                $data=null;
+                $data[0]["loginAuth"]=$auth;
+                $data[0]["opp"] = 1;
+                $data["data"] = $arr; // PUSH ID OF INSERTED RECORD TO ARRAY
+                $data[2]["cols"]=$colhead;
+                echo "Data Saved ... \n";
+            }
+            if ($data[0]["opp"] == 2) // CHECKING OPP CODE 1 FOR DELETE
+            {
                 echo "Request for delete ... \n";
-                $delId = $data[0][4];
+                $delId = $data[0]["dellId"];
                 $this->getDm()
                     ->createQueryBuilder('App\Document\User')
                     ->remove()
@@ -354,25 +344,71 @@ public function koAction(){
                     ->execute();
                 echo "Record Deleted ... \n";
             }
-            if ($data[0][3] == 3) // CHECKING OPP CODE 1 FOR UPDATE
-{
+            if ($data[0]["opp"] == 3) // CHECKING OPP CODE 1 FOR UPDATE
+            {
                 echo "Request for update ... \n";
+                echo $data[0]["pwd"];
+               // echo $data[0]["newName"];
+                //echo $data[0]["editId"];
+
                 $this->getDm()
                     ->createQueryBuilder('App\Document\User')
                     ->update()
                     ->field('name')
-                    ->set($data[0][5])
+                    ->set($data[0]["newName"])
+                     ->field('password')
+                    ->set($data[0]["pwd"])
                     ->field('_id')
-                    ->equals($data[0][4])
+                    ->equals($data[0]["editId"])
                     ->getQuery()
                     ->execute();
+                $this->getDm()->flush();
+
                 echo "Record updated ... \n";
             }
-            
-            // var_dump($data);
+            if ($data[0]["opp"] == 4) // CHECKING OPP CODE 1 FOR SEARCH
+            {
+                echo "Request for search ... \n";
+                $search=$data[0]["search"];
+                $auth=$data[0]["loginAuth"];
+               // var_dump($auth);
+                if($search==null){
+                    $arr=null;
+                    $qb=null;
+                    echo "sending all";
+
+                    $qb= $this->getDm()
+                        ->createQueryBuilder('App\Document\User')->refresh()
+                        ->getQuery()
+                        ->execute();
+                }
+                else
+                {
+                    $arr=null;
+                    $qb=null;
+                    $qb= $this->getDm()
+                        ->createQueryBuilder('App\Document\User')
+                        ->field('name')
+                        ->equals(new \MongoRegex('/'.$search.' */' )) ->getQuery()
+                        ->execute();
+                }
+                $colhead =array("id","name","password");
+                foreach ($qb as $row)
+                {
+                    $arr[]=array("id"=>$row->getId(),"name"=>$row->getName(),"password"=>$row->getPassword());
+                    //var_dump($arr);
+                }
+                $data=null;
+                $data[0]["opp"]=4;
+                $data[0]["loginAuth"] = $auth;
+                $data[1]["data"]=$arr;
+                $data[2]["cols"]=$colhead;
+            }
+
+            //Login and Update, Delete, Insert End here
+            //Send Final Data to DataQ for NodeJs --> SocketIo --> Browser Update
             $data = json_encode($data);
-            var_dump($data);
-            
+           // var_dump($data);
             $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
             $channel = $connection->channel();
             $msg1 = new AMQPMessage($data);
@@ -380,44 +416,14 @@ public function koAction(){
             $channel->close();
             $connection->close();
         };
-        
+
         $channel->basic_consume('MsgQueue', '', false, true, false, false, $callback);
-        while (count($channel->callbacks)) 
-        { 
+        while (count($channel->callbacks))
+        {
             $channel->wait();
         }
         $channel->close();
         $connection->close();
     }
 
-    public function socketAction()
-    {
-        $form = new addForm();
-        return array(
-            'form' => $form
-        );
-    }
-
-    public function compareAction()
-    {
-        $user_session = new Container('user');
-        print_r($user_session->readykey);
-        print_r($user_session->responsekey);
-        if ($user_session->responsekey == $user_session->readykey) {
-            $arr = array(
-                "auth" => "true"
-            );
-        } else {
-            $user_session->username = "";
-            $arr = array(
-                "auth" => "false"
-            );
-           
-        }
-        $viewModel = new ViewModel(array(
-            'data' => $arr
-        ));
-        $viewModel->setTerminal(true);
-        return $viewModel;
-    }
 }

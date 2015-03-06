@@ -28,7 +28,7 @@ class Child
     /**
      *
      * @return the $id
-     *        
+     *
      */
     public function getChildId()
     {
@@ -46,7 +46,7 @@ class Child
 
     /**
      *
-     * @param field_type $id            
+     * @param field_type $id
      */
     public function setChildId($id)
     {
@@ -55,7 +55,7 @@ class Child
 
     /**
      *
-     * @param field_type $name            
+     * @param field_type $name
      */
     public function setChildName($name)
     {
@@ -92,7 +92,7 @@ class User
     /**
      *
      * @return the $id
-     *        
+     *
      */
     public function getId()
     {
@@ -101,7 +101,7 @@ class User
 
     /**
      *
-     * @param field_type $id            
+     * @param field_type $id
      */
     public function setId($id)
     {
@@ -111,7 +111,7 @@ class User
     /**
      *
      * @return the $password
-     *        
+     *
      */
     public function getPassword()
     {
@@ -120,7 +120,7 @@ class User
 
     /**
      *
-     * @param field_type $password            
+     * @param field_type $password
      */
     public function setPassword($password)
     {
@@ -138,7 +138,7 @@ class User
 
     /**
      *
-     * @param field_type $name            
+     * @param field_type $name
      */
     public function setName($name)
     {
@@ -147,7 +147,7 @@ class User
 
     /**
      *
-     * @param field_type $child            
+     * @param field_type $child
      */
     public function setChildName($name)
     {

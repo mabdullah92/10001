@@ -1,61 +1,47 @@
 
-<div>
-<!-- data-bind="value: search, valueUpdate: 'afterkeydown'" -->
-			<input  />
-		</div>
+<table >
+    <tr>
+        <th>Name</th>
+        <th>Password</th>
+        <th>Operation</th>
+    </tr>
+    <tbody data-bind="foreach: rows">
+    <tr>
+        <td data-bind="text: name"></td>
+        <td data-bind="text: pwd"></td>
+        <td data-bind="text: id"></td>
+    </tr>
+</table>
+<script type="text/javascript">
+    var dataModel = function() {
+        this.rows = ko.observableArray([]);
 
-<div class='liveExample'> 
-    
-    <div data-bind='simpleGrid: gridViewModel'> </div>
-     
-    
-     
-    <button data-bind='click: sortByName'>
-        Sort by name
-    </button>
-     
-    <button data-bind='click: jumpToFirstPage, enable: gridViewModel.currentPageIndex'>
-        Jump to first page
-    </button>
-    
-</div>
-<script
-		src="http://knockoutjs.com/downloads/knockout-3.2.0.js"></script>
-	<script
-		src="http://knockoutjs.com/examples/resources/knockout.simpleGrid.3.0.js"></script>
+    };
 
-	<script>
-		//var data=
-	var initialData = $.getJSON("http://192.168.83.130/demoz2/public/app/data", function(data) { 
+    $(document).ready(function() {
+        var model = new dataModel();
+        ko.applyBindings(model);
 
+        $.ajax({
+            method : "POST",
+            url : "http://192.168.83.130/demoz2/public/app/data",
+            success : function(data) {
+                data=JSON.parse(data);
+                for (var x in data) {
+              //      alert(data[x]);
+                    model.rows.push(data[x]);
 
-	
-	                
-	               var PagedGridModel = function(items) {
-	                   this.items = ko.observableArray(items);
-	                
-	                 
-	                   this.sortByName = function() {
-	                       this.items.sort(function(a, b) {
-	                           return a.name < b.name ? -1 : 1;
-	                       });
-	                   };
-	                
-	                   this.jumpToFirstPage = function() {
-	                       this.gridViewModel.currentPageIndex(0);
-	                   };
-	                
-	                   this.gridViewModel = new ko.simpleGrid.viewModel({
-	                       data: this.items,
-	                       columns: [
-	                           { headerText: "Id", rowText: "id" },
-	                           { headerText: "Name ", rowText: "name" },
-	                           { headerText: "Password", rowText: "pwd" }
-	                       ],
-	                       pageSize: 4
-	                   });
-	               };
-	                
-	               ko.applyBindings(new PagedGridModel(data));	
-	});
-	</script>
+                }
+            }
+        });
+    });
+
+    //    var viewModel = {
+    //    };
+    //
+    //    pager.extendWithPage(viewModel);
+    //    ko.applyBindings(viewModel,document.getElementById("abdullah"));
+    //
+    //    pager.start();
+</script>
+

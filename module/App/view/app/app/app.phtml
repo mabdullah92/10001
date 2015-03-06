@@ -4,143 +4,230 @@ namespace App\view;
 $title = 'Application';
 use Zend\Session\Container;
 $user_session = new Container('user');
-// echo $user_session-> username;
 ?>
-<script src="http://192.168.83.130:3000/socket.io/socket.io.js"></script>
 <script type="text/javascript">
-    var socket = io.connect('http://192.168.83.130:3000');
-    socket.on('new-item', function (data) {
-  	
-  	var msg=JSON.parse(data);
-  	if(msg[0][8]==="false")
-  	{
-  		document.getElementById("validuser").innerHTML="Incorrect Credentials"
-  	  	}
-	else	{
-  	if(msg[0][8]=="<?php echo $user_session-> readykey;?>")
-  	{
-  		window.location.href = "#nav/grid";
-  	}}
-  console.log(msg[0][2]);
-  	if(msg[0][2]=="<?php echo $user_session->  username;?>")
-      document.getElementById("userTable").innerHTML += "<tr id="+msg[0][4]+"><td>" + msg[0][0] + "</td>"+"<td>" + msg[0][1] + "</td>"+"<td><a onclick=\"setEditUser(this)\" id="+msg[0][4]+" ><span class=\"glyphicon glyphicon-edit\"></span> </a><a id="+msg[0][4]+" onclick=\"deleteUser(this)\"><span class=\"glyphicon glyphicon-trash\"></span></a></td></tr>";
-    });
+    var mydata =new Array();
 </script>
-<div data-bind="page: {id: 'nav'}">
+<div id="pager" data-bind="page: {id: 'nav'}">
 
-	<div data-bind="page: {id: 'login',role : 'start' }">
-		<label id="validuser"></label>
-		<?php
-$form = $this->form;
-$form->setAttribute('id', "loginForm");
-$form->prepare();
-echo $this->form()->openTag($form);
-echo $this->formRow($form->get('login_name'));
-echo $this->formRow($form->get('login_pwd'));
-echo $this->formRow($form->get('login'));
-echo $this->form()->closeTag();
-?>
-			</div>
-	<div class="row">
-		<div class="col-sm-6">
-			<div data-bind="page: {id: 'grid'}">
+    <div  data-bind="page: {id: 'login',role : 'start', beforeShow:function(){$('.logout').hide();} }">
+        <label id="validuser"></label>
+        <?php
+        $form = $this->form;
+        $form->setAttribute('id', "loginForm");
+        $form->prepare();
+        echo $this->form()->openTag($form);
+        echo $this->formRow($form->get('login_name'));
+        echo $this->formRow($form->get('login_pwd'));
+        echo $this->formRow($form->get('login'));
+        echo $this->form()->closeTag();
+        ?>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div data-bind="page: {id: 'grid', beforeShow:verifyUser()}">
 
-				<h1>Users</h1>
-				<p>
-					<a href="#nav/add">Add New Member</a>.
-				</p>
-				<p>
-					<input type="text" placeholder="search here" id="txt_search"/>
-				</p>
-			
-				<table class="table table-hover" id="userTable">
-					<tr>
-						<th>Username</th>
-						<th>Password</th>
-						<th></th>
-					</tr>
-		<?php
-foreach ($qb as $user) :
-    ?>
-					<tr id="<?php echo $user->getId();?>">
-						<td><?php  echo $this->escapehtml($user->getName()); ?></td>
-						<td><?php  echo $this->escapehtml($user->getPassword()); ?></td>
-						<td><a onclick="setEditUser(this)"
-							id="<?php echo $user->getId();?>"><span
-								class="glyphicon glyphicon-edit"></span></a> <a
-							onclick="deleteUser(this)" id="<?php echo $user->getId();?>"><span
-								class="glyphicon glyphicon-trash"></span> </a></td>
-					</tr>
-		<?php
-endforeach
-;
-?>
-				</table>
+                <h1>Users</h1>
+                <p>
+<a href="#nav/add" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>Add New User</a>
+                </p>
 
-			</div>
-		</div>
-	</div>
-	<div data-bind="page: {id: 'add' }">
-		    <?php
-    $form = $this->form;
-    $form->setAttribute('id', "addForm");
-    $form->prepare();
-    echo $this->form()->openTag($form);
-    ?>
-			<label for="username">User Name:</label>
-			<?php
-echo $this->formRow($form->get('username'));
-?>
-			<br> <label for="username">Password:</label>
-			<?php
-echo $this->formRow($form->get('add_pwd'));
-echo "<br>";
-echo "<label style=\"color:red\" id=\"isAddValid\"></label>";
-echo "<br>";
-echo $this->formRow($form->get('add')) . "&nbsp <a href=\"#nav/grid\">Cancel</a>";
-echo $this->form()->closeTag();
-?>
-	
-	</div>
-	<div data-bind="page: {id: 'delete' }">
-		<?php
-$form = $this->form;
-$form->setAttribute('action', $this->url('app', array(
-    'action' => 'delete'
-)));
-$form->setAttribute('id', "delForm");
-$form->prepare();
-echo $this->form()->openTag($form);
-echo $this->formRow($form->get('username'));
-echo $this->formSubmit($form->get('submit')) . "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
-echo $this->form()->closeTag();
-?>
-		</div>
-	<div data-bind="page: {id: 'edit' }">
-		<?php
-$form = $this->form;
-$form->setAttribute('action', $this->url('app', array(
-    'action' => 'edit'
-)));
-$form->setAttribute('id', "editForm");
-$form->prepare();
-echo $this->form()->openTag($form);
-echo $this->formRow($form->get('stateEdit'));
-echo $this->formRow($form->get('editdisp'));
-echo $this->formRow($form->get('btn_edit')) . "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
-echo $this->form()->closeTag();
-?>
-		</div>
+                <div data-bind="stopBinding: true">
 
+                    <div id="table_grid">
+
+                        <input class=" form-inline form-control input-small"  placeholder="search" id="search"  /> <br>
+                        <table  class="table table-hover table-bordered text-center" style="background: white; box-shadow: 2px 2px 16px #002A21">
+                            <tr data-bind="foreach:cols">
+                                <th style="text-transform: capitalize" data-bind="text:$data,click: $root.sort.bind($data,$data)"></th>
+                            </tr>
+
+                            <tbody id="tbody_data" data-bind="foreach: mydata">
+                            <tr data-bind="foreach:cols , attr:{id:$data['id']}">
+                                <!-- ko if: $index() == 0 -->
+                                <td><button class="btn btn-danger"  data-bind="attr:{id:$parent['id']}" onclick="deleteUser(this)"><span class="glyphicon glyphicon-trash"></span></button> <button class="btn btn-primary" data-bind="click:$root.tgl.bind($data,$parent),attr:{id:$parent['id']}"><span class="glyphicon glyphicon-edit"></span></button></td>
+                                <!-- /ko -->
+                                <!-- ko if: $index() != 0 -->
+                                <td data-bind="text:$parent[$data]"></td>
+                                <!-- /ko -->
+                            </tr>
+                            <tr hidden="" data-bind="foreach:cols, attr:{id:$data['id']+'hidden'}">
+                             <!-- ko if: $index() == 0 -->
+                                <td><button data-bind="attr:{id:$parent[$data]}" class="btn btn-success update">Update</button><input type="hidden" data-bind="value: $parent[$data], attr:{name:$data}" /></td>
+                                <!-- /ko -->
+                                <!-- ko if: $index() != 0 -->
+                               <td><input type="text" class="form-control" data-bind="value: $parent[$data], attr:{name:$data}"/></td>
+                                <!-- /ko -->
+                            </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-bind="page: {id: 'add' , beforeShow:verifyUser()}">
+        <?php
+        $form = $this->form;
+        $form->setAttribute('id', "addForm");
+        $form->prepare();
+        echo $this->form()->openTag($form);
+        ?>
+        <div class="form-group">
+            <label for="username">User Name:</label>
+            <?php echo $this->formRow($form->get('username')); ?>
+        </div>
+        <div class="form-group">
+            <label for="username">Password:</label>
+            <?php
+            echo $this->formRow($form->get('add_pwd'));?>
+            <?php
+            echo "<label style=\"color:red\" id=\"isAddValid\"></label>"; ?>
+        </div>
+        <div class="form-group">
+            <?php
+            echo $this->formRow($form->get('add')) . "&nbsp <a class=\"btn btn-danger\" href=\"#nav/grid\">Cancel</a>";
+            echo $this->form()->closeTag();
+            ?>
+        </div>
+    </div>
+    <div data-bind="page: {id: 'edit' , beforeShow:verifyUser()}">
+        <?php
+        $form = $this->form;
+        $form->setAttribute('action', $this->url('app', array(
+            'action' => 'edit'
+        )));
+        $form->setAttribute('id', "editForm");
+        $form->prepare();
+        echo $this->form()->openTag($form);
+        echo $this->formRow($form->get('stateEdit'));
+        echo $this->formRow($form->get('editdisp'));
+        echo $this->formRow($form->get('btn_edit')) . "	&nbsp <a href=\"#nav/grid\">Cancel</a>";
+        echo $this->form()->closeTag();
+        ?>
+    </div>
 </div>
 
-
 <script type="text/javascript">
-        var viewModel = {
-        };
+    //search function
+    $( "#search" ).keyup(function() {
+        var search=this.value;
+        $.ajax({
+            type : "POST",
+            url : myUrl+"/strom/public/app/search",
+            cache : false,
+            data : {
+                search : search
+            }
+        })
+    });
+    //Set control enable decedent bindings
+    ko.bindingHandlers.stopBinding = {
+        init: function() {
+            return { controlsDescendantBindings: true };
+        }
+    };
 
-        pager.extendWithPage(viewModel);
-        ko.applyBindings(viewModel);
+    var self=this;
 
-        pager.start();
-    </script>
+    var search= ko.observable();
+    var socket = io.connect(myUrl+':3000');
+    var userViewModel={
+        cols: ko.observableArray([]),
+        mydata : ko.observableArray([]),
+        sort : function(sortMe,data){
+                  mydata.sort(function(left, right)
+                 { return left[data] == right[data] ? 0 : (left[data] < right[data] ? -1 : 1) })},
+        tgl : function(d,data)
+        {
+            $("#"+d.id+"hidden").toggle("slow");
+        }
+
+
+    };
+    var cols=userViewModel.cols;
+    var mydata=userViewModel.mydata;
+    socket.on('new-item', function (data)
+    {
+
+        var msg=JSON.parse(data);
+        console.log(msg);
+        if(msg[0]["loginAuth"]==="false") //check if login failed
+        {
+            document.getElementById("validuser").innerHTML="Incorrect Credentials";
+        }
+        else
+        {
+            var cc=$.ajax({type: "GET", url: myUrl+"/strom/public/app/isloggedin", async: false}).responseText;
+            if(msg[0]["loginAuth"]==cc)
+            {
+                $('.logout').show();
+                if(msg[2]["cols"]!=null){
+                    cols.removeAll();
+                    msg[2]["cols"].forEach(function(d){
+                        cols.push(d);
+                    });
+                }
+                if(msg[0]["opp"]==0) { //POPULATE GRID ON LOGIN
+//                    msg[1]["data"].forEach(function (d) {
+//                        mydata.push(d);
+//                    });
+                    window.location.href = "#nav/grid";
+                }
+                if(msg[0]["opp"]==1) { //PUSH NEW RECORD TO ARRAY
+                    mydata.push({id: msg["data"]["id"], name: msg["data"]["name"], password: msg["data"]["password"]});
+                }
+                if(msg[0]["opp"]==4) //SEARCH RECORD IN DB
+                {
+                    mydata.removeAll();
+
+                    msg[1]["data"].forEach(function(d){
+//                        var array = $.map(d, function(value, index) {
+//                            return [value];
+//                        });
+                        mydata.push(d);
+                    });
+
+                }
+
+            }
+        }
+
+        //ko widgets grid , add , grid here {}
+    });
+    function userViewModel() {
+
+    };
+    ko.applyBindings( userViewModel,document.getElementById('table_grid'));
+    //Initialize pager
+    var viewModel = {
+    };
+    pager.extendWithPage(viewModel);
+    ko.applyBindings(viewModel,document.getElementById("pager"));
+    pager.start();
+
+
+    $( '#table_grid' ).on( 'click', '.update', function () {
+
+        $.ajax({
+            type : "POST",
+            url : myUrl+"/strom/public/app/edit",
+            cache : false,
+            data :    $(this).closest('tr').find('input').serialize()
+        }).done(function(msg) {
+            $('#search').keyup();
+        });
+
+
+    });
+
+    function toggle(click) {
+        var myclass = click.class;
+        console.log(click.class);
+
+        $("#"+myclass+"hidden").toggle(); $("#"+myclass+"shown").toggle();
+    }
+    window.onload($('#search').keyup());
+
+</script>
