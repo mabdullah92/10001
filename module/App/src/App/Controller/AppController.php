@@ -10,10 +10,10 @@ use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use Zend\Session\Container;
 use Zend\View\Model\JsonModel;
-
+use App\Model\userModel;
 class AppController extends AbstractActionController
 {
-
+    
     /*
      * OPERATION CODE REFERENCE
      * LOGIN : 0
@@ -22,10 +22,10 @@ class AppController extends AbstractActionController
      * UPDATE: 3
      * SEARCH: 4
      */
-    public function init() { }
-
+    public function init() {}
     private function getDm()
     {
+        
         $dm = $this->getServiceLocator()->get('doctrine.documentmanager.odm_default');
 
         return $dm;

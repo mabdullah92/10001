@@ -29,7 +29,7 @@ $user_session = new Container('user');
 
                 <h1>Users</h1>
                 <p>
-<a href="#nav/add" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>Add New User</a>
+<a href="#nav/add" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>Add New User</a> <a onclick="plot();" class="btn btn-warning"><span class="glyphicon glyphicon-graph"></span>Academics</a>
                 </p>
 
                 <div data-bind="stopBinding: true">
@@ -228,6 +228,14 @@ $user_session = new Container('user');
 
         $("#"+myclass+"hidden").toggle(); $("#"+myclass+"shown").toggle();
     }
+
+    function plot(){
+    	$.ajax({
+            type : "POST",
+            url : myUrl+"/strom/public/profile/index/grid"
+        });
+        
+        }
     window.onload($('#search').keyup());
 
 </script>
