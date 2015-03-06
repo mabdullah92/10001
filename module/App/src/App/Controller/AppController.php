@@ -11,6 +11,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 use Zend\Session\Container;
 use Zend\View\Model\JsonModel;
 use App\Model\userModel;
+
 class AppController extends AbstractActionController
 {
     
@@ -272,6 +273,7 @@ class AppController extends AbstractActionController
         $channel->queue_declare('MsgQueue', false, false, false, false);
         $callback = function ($msg) // GET DATA FROM MSG QUEUE
         {
+            $method = new userModel();
             $data = json_decode($msg->body,true); // DECODE TO RECEIVED MSG ARRAY
             echo "Received Data : ";
             var_dump($msg->body);
@@ -312,103 +314,30 @@ class AppController extends AbstractActionController
             }
             if ($data[0]["opp"] == 1) // CHECKING OPP CODE 1 FOR INSERT
             {
-                echo "Request for insert record ... \n";
-                $user = new User();
-                $auth=$data[0]["loginAuth"];
-                $user->setPassword($data[1]["pwd"]);
-                $user->setName($data[1]["name"]);
-                $this->getDm()->persist($user);
-                $this->getDm()->flush();
-                $id = $user->getId();
-                $name = $user->getName();
-                $pwd = $user->getPassword();
-                $colhead =array("id","name","password");
-                $arr=array("id"=>$id,"name"=>$name,"password"=>$pwd);
-                $data=null;
-                $data[0]["loginAuth"]=$auth;
-                $data[0]["opp"] = 1;
-                $data["data"] = $arr; // PUSH ID OF INSERTED RECORD TO ARRAY
-                $data[2]["cols"]=$colhead;
-                echo "Data Saved ... \n";
+                
+                $data= $method->insertC($this->getDm(),$data);
             }
             if ($data[0]["opp"] == 2) // CHECKING OPP CODE 1 FOR DELETE
             {
                 echo "Request for delete ... \n";
-                $delId = $data[0]["dellId"];
-                $this->getDm()
-                    ->createQueryBuilder('App\Document\User')
-                    ->remove()
-                    ->field('_id')
-                    ->equals(new \MongoId($delId))
-                    ->getQuery()
-                    ->execute();
+                $data= $method->deleteC($this->getDm(),$data);
                 echo "Record Deleted ... \n";
             }
             if ($data[0]["opp"] == 3) // CHECKING OPP CODE 1 FOR UPDATE
             {
                 echo "Request for update ... \n";
-                echo $data[0]["pwd"];
-               // echo $data[0]["newName"];
-                //echo $data[0]["editId"];
-
-                $this->getDm()
-                    ->createQueryBuilder('App\Document\User')
-                    ->update()
-                    ->field('name')
-                    ->set($data[0]["newName"])
-                     ->field('password')
-                    ->set($data[0]["pwd"])
-                    ->field('_id')
-                    ->equals($data[0]["editId"])
-                    ->getQuery()
-                    ->execute();
-                $this->getDm()->flush();
-
+                $data= $method->updateC($this->getDm(),$data);
                 echo "Record updated ... \n";
             }
             if ($data[0]["opp"] == 4) // CHECKING OPP CODE 1 FOR SEARCH
             {
                 echo "Request for search ... \n";
-                $search=$data[0]["search"];
-                $auth=$data[0]["loginAuth"];
-               // var_dump($auth);
-                if($search==null){
-                    $arr=null;
-                    $qb=null;
-                    echo "sending all";
-
-                    $qb= $this->getDm()
-                        ->createQueryBuilder('App\Document\User')->refresh()
-                        ->getQuery()
-                        ->execute();
-                }
-                else
-                {
-                    $arr=null;
-                    $qb=null;
-                    $qb= $this->getDm()
-                        ->createQueryBuilder('App\Document\User')
-                        ->field('name')
-                        ->equals(new \MongoRegex('/'.$search.' */' )) ->getQuery()
-                        ->execute();
-                }
-                $colhead =array("id","name","password");
-                foreach ($qb as $row)
-                {
-                    $arr[]=array("id"=>$row->getId(),"name"=>$row->getName(),"password"=>$row->getPassword());
-                    //var_dump($arr);
-                }
-                $data=null;
-                $data[0]["opp"]=4;
-                $data[0]["loginAuth"] = $auth;
-                $data[1]["data"]=$arr;
-                $data[2]["cols"]=$colhead;
+                $data= $method->searchC($this->getDm(),$data);
+                echo "Return Records ... \n";
+               
             }
 
-            //Login and Update, Delete, Insert End here
-            //Send Final Data to DataQ for NodeJs --> SocketIo --> Browser Update
             $data = json_encode($data);
-           // var_dump($data);
             $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
             $channel = $connection->channel();
             $msg1 = new AMQPMessage($data);
