@@ -5,7 +5,8 @@ use App\Document\User;
 
 class userModel
 {
-    public function insertC($dm,$insert)
+
+    public function insertC($dm, $insert)
     {
         $data = $insert;
         $user = new User();
@@ -17,8 +18,16 @@ class userModel
         $id = $user->getId();
         $name = $user->getName();
         $pwd = $user->getPassword();
-        $colhead = array("id","name","password");
-        $arr = array("id" => $id,"name" => $name,"password" => $pwd);
+        $colhead = array(
+            "id",
+            "name",
+            "password"
+        );
+        $arr = array(
+            "id" => $id,
+            "name" => $name,
+            "password" => $pwd
+        );
         $data = null;
         $data[0]["loginAuth"] = $auth;
         $data[0]["opp"] = 1;
@@ -27,7 +36,7 @@ class userModel
         return $data;
     }
 
-    public function updateC($dm,$update)
+    public function updateC($dm, $update)
     {
         $data = $update;
         $dm->createQueryBuilder('App\Document\User')
@@ -40,11 +49,11 @@ class userModel
             ->equals($data[0]["editId"])
             ->getQuery()
             ->execute();
-         $dm->flush();
-         return $data;
+        $dm->flush();
+        return $data;
     }
 
-    public function deleteC($dm,$delete)
+    public function deleteC($dm, $delete)
     {
         $data = $delete;
         $delId = $data[0]["dellId"];
@@ -57,7 +66,7 @@ class userModel
         return $data;
     }
 
-    public function searchC($dm,$search)
+    public function searchC($dm, $search)
     {
         $data = $search;
         $search = $data[0]["search"];
@@ -65,17 +74,15 @@ class userModel
         // var_dump($auth);
         if ($search == null) {
             $arr = null;
-            $qb = null;            
-            $qb =$dm
-                ->createQueryBuilder('App\Document\User')
+            $qb = null;
+            $qb = $dm->createQueryBuilder('App\Document\User')
                 ->refresh()
                 ->getQuery()
                 ->execute();
         } else {
             $arr = null;
             $qb = null;
-            $qb = $dm
-                ->createQueryBuilder('App\Document\User')
+            $qb = $dm->createQueryBuilder('App\Document\User')
                 ->field('name')
                 ->equals(new \MongoRegex('/' . $search . ' */'))
                 ->getQuery()
@@ -102,8 +109,17 @@ class userModel
         return $data;
     }
 
-    public function find($find)
+    public function findC($dm, $find)
     {
-        
+        $data = $find;
+        $data = $dm->createQueryBuilder('App\Document\User')
+            ->field('name')
+            ->equals($data[0]["loginU"])
+            ->field('password')
+            ->equals($data[0]["loginP"])
+            ->count()
+            ->getQuery()
+            ->execute();
+        return $data;
     }
 }

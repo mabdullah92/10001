@@ -283,15 +283,7 @@ class AppController extends AbstractActionController
             if ($data[0]["opp"] == 0) // CHECKING OPP CODE 0 FOR LOGIN
             {
                 echo "Request for authentication ... \n";
-                $exists = $this->getDm()
-                    ->createQueryBuilder('App\Document\User')
-                    ->field('name')
-                    ->equals($data[0]["loginU"])
-                    ->field('password')
-                    ->equals($data[0]["loginP"])
-                    ->count()
-                    ->getQuery()
-                    ->execute();
+                $exists = $method->findC($this->getDm(),$data);
                 if ($exists) {
                     echo "Credentials Authenticated ... \n";
                     $qb = $this->getDm()
