@@ -27,23 +27,21 @@ return array(
             'odm_default' => array(
                 'drivers' => array(
                     'App\Document' => 'aplikasi',
-                    'Profile\Document' => 'ccc',
-                    
+                    'Profile\Document' => 'profileD'
                 )
             ),
             'aplikasi' => array(
                 'class' => 'Doctrine\ODM\MongoDB\Mapping\Driver\AnnotationDriver',
                 'cache' => 'array',
                 'paths' => array(
-                    'module/App/src/App/Document',
+                    'module/App/src/App/Document'
                 )
-            )
-            ,
-            'ccc' => array(
+            ),
+            'profileD' => array(
                 'class' => 'Doctrine\ODM\MongoDB\Mapping\Driver\AnnotationDriver',
                 'cache' => 'array',
                 'paths' => array(
-                    'module/Profile/src/Profile/Document'
+                    'module/Profile/src/App/Profile'
                 )
             )
         ),

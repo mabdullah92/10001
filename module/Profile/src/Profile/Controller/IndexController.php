@@ -65,14 +65,14 @@ class IndexController extends AbstractActionController
             ->execute();
         $colhead = array(
             "id",
-            "City",
-            "Institute"
+            "city",
+            "institute"
         );
         foreach ($qb as $row) {
             $arr[] = array(
                 "id" => $row->getId(),
-                "City" => $row->getCity(),
-                "Institute" => $row->getInstitue()
+                "city" => $row->getCity(),
+                "institute" => $row->getInstitue()
             );
             // var_dump($arr);
         }
@@ -81,7 +81,7 @@ class IndexController extends AbstractActionController
         $data[0]["loginAuth"] = 'ali';
         $data[1]["data"] = $arr;
         $data[2]["cols"] = $colhead;
-        
+        $data[2]["tableName"] = "academic";
         $this->sendMsg($data);
         return $this->getResponse();
     }

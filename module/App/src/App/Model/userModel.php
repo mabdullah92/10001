@@ -10,9 +10,9 @@ class userModel
     {
         $data = $insert;
         $user = new User();
-        $auth = $data[0]["loginAuth"];
-        $user->setPassword($data[1]["pwd"]);
-        $user->setName($data[1]["name"]);
+        $auth = $data["loginAuth"];
+        $user->setPassword($data["add_pwd"]);
+        $user->setName($data["username"]);
         $dm->persist($user);
         $dm->flush();
         $id = $user->getId();
@@ -42,11 +42,11 @@ class userModel
         $dm->createQueryBuilder('App\Document\User')
             ->update()
             ->field('name')
-            ->set($data[0]["newName"])
+            ->set($data["name"])
             ->field('password')
-            ->set($data[0]["pwd"])
+            ->set($data["password"])
             ->field('_id')
-            ->equals($data[0]["editId"])
+            ->equals($data["id"])
             ->getQuery()
             ->execute();
         $dm->flush();
@@ -56,7 +56,7 @@ class userModel
     public function deleteC($dm, $delete)
     {
         $data = $delete;
-        $delId = $data[0]["dellId"];
+        $delId = $data["delId"];
         $dm->createQueryBuilder('App\Document\User')
             ->remove()
             ->field('_id')
@@ -66,24 +66,29 @@ class userModel
         return $data;
     }
 
-    public function searchC($dm, $search)
+    public function searchC($dm, $s)
     {
-        $data = $search;
-        $search = $data[0]["search"];
-        $auth = $data[0]["loginAuth"];
-        // var_dump($auth);
+        $data = $s;
+        $search=null;
+        $auth=null;
+        if(array_key_exists("search",$data)) {
+            $search = $data["search"];
+        }
+        if(array_key_exists("loginAuth",$data)) {
+            $auth = $data["loginAuth"];
+        }
         if ($search == null) {
             $arr = null;
             $qb = null;
             $qb = $dm->createQueryBuilder('App\Document\User')
-                ->refresh()
+                ->refresh()->skip(5)->limit(5)
                 ->getQuery()
                 ->execute();
         } else {
             $arr = null;
             $qb = null;
             $qb = $dm->createQueryBuilder('App\Document\User')
-                ->field('name')
+                ->field('name')->skip(5)->limit(5)
                 ->equals(new \MongoRegex('/' . $search . ' */'))
                 ->getQuery()
                 ->execute();
@@ -105,6 +110,7 @@ class userModel
         $data[0]["opp"] = 4;
         $data[0]["loginAuth"] = $auth;
         $data[1]["data"] = $arr;
+        $data[2]["tableName"] = "user";
         $data[2]["cols"] = $colhead;
         return $data;
     }
@@ -114,12 +120,17 @@ class userModel
         $data = $find;
         $data = $dm->createQueryBuilder('App\Document\User')
             ->field('name')
-            ->equals($data[0]["loginU"])
+            ->equals($data["login_name"])
             ->field('password')
-            ->equals($data[0]["loginP"])
+            ->equals($data["login_pwd"])
             ->count()
             ->getQuery()
             ->execute();
-        return $data;
+
+        $arr[0]["loginAuth"]=$find["login_name"];
+        $arr[0]["opp"]=0;
+        $arr[2]["tableName"]="user";
+       // $arr=json_encode($arr);
+        return $arr;
     }
 }

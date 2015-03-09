@@ -4,15 +4,16 @@ function addUser() {
     } else if ($("#add_pwd").val() === "") {
         document.getElementById("isAddValid").innerHTML = "Please Add Password";
     } else {
+        var tableName= $("#datatable").attr("name");
         $.ajax({
             type : "POST",
-            url : myUrl+"/strom/public/app/prod",
+            url : myUrl+"/strom/public/app/submit",
             cache : false,
-            data : $("#addForm").serialize()
+            data : $("#addForm").serialize()+'&tableName='+tableName+'&operation='+'insertC'
         })
             .done(
             function(msg) {
-                window.location = myUrl+"/strom/public/app/app#nav/grid";
+                window.location = myUrl+"/strom/public/app#nav/grid";
             });
     }
 }
@@ -36,15 +37,17 @@ function editUser() {
 function deleteUser(click) {
     var id = click.id;
     e = "#" + id;
-    console.log(e);
+    var tableName= $("#datatable").attr("name");
     $(e).css('background-color','#C9302C' );
     $(e).hide('slow');
     $.ajax({
         type : "POST",
-        url : myUrl+"/strom/public/app/delete",
+        url : myUrl+"/strom/public/app/submit",
         cache : false,
         data : {
-            delId : id
+            delId : id,
+            tableName : tableName,
+            operation : "deleteC"
         }
     }).done(function(msg) {
 
@@ -55,7 +58,7 @@ function loginUser() {
         type : "POST",
         url : myUrl+"/strom/public/app/login",
         cache : false,
-        data : $("#loginForm").serialize()
+        data : $("#loginForm").serialize()+'&tableName='+'user'+'&operation='+'findC'
     })
         .done(
         function(msg) {
