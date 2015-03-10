@@ -63,14 +63,12 @@ class AppController extends AbstractActionController
         echo "logout";
         return $this->getResponse();
     }
-
-    //Index Action is Still Unused
+    //Index Action
     public function indexAction(){
         $form = new addForm();
         return new ViewModel(array(
             'form' => $form
         ));}
-
     //Basic Login Operation
     public function loginAction()
     {

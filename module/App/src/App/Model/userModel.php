@@ -81,17 +81,29 @@ class userModel
             $arr = null;
             $qb = null;
             $qb = $dm->createQueryBuilder('App\Document\User')
-                ->refresh()->skip(5)->limit(5)
+                ->refresh()->skip($data["page"]*$data["pageSize"])->limit($data["pageSize"])
                 ->getQuery()
                 ->execute();
         } else {
             $arr = null;
             $qb = null;
             $qb = $dm->createQueryBuilder('App\Document\User')
-                ->field('name')->skip(5)->limit(5)
+                ->field('name')->skip($data["page"]*$data["pageSize"])->limit($data["pageSize"])
                 ->equals(new \MongoRegex('/' . $search . ' */'))
                 ->getQuery()
                 ->execute();
+        }
+
+        $countme=0;
+        $count=$qb->count();
+        $count=ceil($count/$data["pageSize"]);
+        if($count==0){
+            $counted=array(0);
+        }
+        while($countme<$count)
+        {
+            $counted[]=array($countme);
+            $countme++;
         }
         $colhead = array(
             "id",
@@ -112,6 +124,7 @@ class userModel
         $data[1]["data"] = $arr;
         $data[2]["tableName"] = "user";
         $data[2]["cols"] = $colhead;
+        $data[2]["count"]=$counted;
         return $data;
     }
 

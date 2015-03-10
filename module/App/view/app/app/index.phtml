@@ -29,7 +29,7 @@ $user_session = new Container('user');
                     <div id="table_grid">
                         <h1 style="text-transform: capitalize" data-bind="text:tablename"></h1>
                         <p>
-                            <a href="#nav/add" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>Add New User</a> <a onclick="plot();" class="btn btn-warning"><span class="glyphicon glyphicon-graph"></span>Academics</a>
+                            <a href="#nav/add" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>Add New User</a> <a onclick="plot();" class="btn btn-warning"><span class="glyphicon glyphicon-graph"></span>Academics</a> <a onclick="user();" class="btn btn-warning"><span class="glyphicon glyphicon-graph"></span>Users</a>
                         </p>
                         <input class=" form-inline form-control input-small"  placeholder="search" id="search"  /> <br>
                         <table id="datatable" class="table table-hover table-bordered text-center" data-bind="attr:{name:tablename}" style="background: white; box-shadow: 2px 2px 16px #002A21">
@@ -54,25 +54,11 @@ $user_session = new Container('user');
                                 <!-- /ko -->
                             </tr>
                             </tbody>
-
                         </table>
                         <nav class="pull-right">
-                            <ul class="pagination">
-                                <li>
-
-                                        <span aria-hidden="true">&laquo;</span>
-
-                                </li>
-                                <li><a href="#">1</a></li>
-                                <li><a href="#">2</a></li>
-                                <li><a href="#">3</a></li>
-                                <li><a href="#">4</a></li>
-                                <li><a href="#">5</a></li>
-                                <li>
-
-                                        <span aria-hidden="true">&raquo;</span>
-
-                                </li>
+                            <input class="form-control" type="text" placeholder="Page Size 5" maxlength="3" id="txt_pageSize"/>
+                            <ul data-bind="foreach: tablecount" class="pagination">
+                                <li ><a  onclick="paginate(this)" data-bind="text:$data, attr:{id:$data}"></a></li>
                             </ul>
                         </nav>
                     </div>
